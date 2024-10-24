@@ -1,0 +1,71 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "ignore": [
+      "node_modules/**/*",
+      "*.mts",
+      "./.vscode/*"
+    ]
+  },
+  "organizeImports": {
+    "enabled": false
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "lineWidth": 100,
+    "ignore": [
+      "*.json"
+    ],
+    "lineEnding": "lf"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "a11y": {
+        "useIframeTitle": "off",
+        "noSvgWithoutTitle": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "noVar": "off",
+        "useNodejsImportProtocol": "off",
+        "noParameterAssign": "off",
+        "noArguments": "off",
+        "useImportType": "off"
+      },
+      "performance": {
+        "noAccumulatingSpread": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "noBannedTypes": "off",
+        "noExtraBooleanCast": "off",
+        "useOptionalChain": "off",
+        "noUselessFragments": "off",
+        "useLiteralKeys": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noImplicitAnyLet": "off",
+        "noRedeclare": "off",
+        "noAssignInExpressions": "off",
+        "noArrayIndexKey": "off",
+        "noEmptyInterface": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "warn",
+        "noInnerDeclarations": "off"
+      }
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true
+    }
+  }
+}
