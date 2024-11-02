@@ -1,6 +1,6 @@
 import http from "node:http";
-import { parse } from "url";
 import { ClientRequest } from "./request.js";
+import { ClientResponse, ContentType } from "./response.js";
 // url = require("url")
 // url.parse
 
@@ -17,11 +17,13 @@ import { ClientRequest } from "./request.js";
 class Server {
   routes: string[];
   methods: string[];
+  handlers: ((req: ClientRequest) => ClientResponse)[];
   server: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse> | undefined;
 
   constructor() {
     this.routes = [];
     this.methods = [];
+    this.handlers = [];
   }
 
   listen(port: number) {
@@ -29,7 +31,7 @@ class Server {
     this.server.listen(port, () => console.log(`Listening on ${port}...`));
   }
 
-  async processRequest(req: http.IncomingMessage, params: object): Promise<ClientRequest> {
+  async createExternalRequest(req: http.IncomingMessage, params: object): Promise<ClientRequest> {
     let body = "";
 
     // Use a promise to handle asynchronous data collection
@@ -43,7 +45,6 @@ class Server {
       });
     });
 
-    // Create and return the ClientRequest instance once the body is ready
     return new ClientRequest(
       body ? JSON.parse(body) : {},
       Object.fromEntries(new URL(req.url!, `http://${req.headers.host}`).searchParams),
@@ -51,7 +52,22 @@ class Server {
     );
   }
 
-  handleRequest(
+  writeToInternalResponse(
+    internalRes: http.ServerResponse<http.IncomingMessage>,
+    externalRes: ClientResponse,
+  ) {
+    const contentType =
+      externalRes.contentType === ContentType.Json
+        ? "application/json"
+        : externalRes.contentType === ContentType.Html
+          ? "text/html"
+          : "text/plain";
+
+    internalRes.writeHead(externalRes.status, { "Content-Type": contentType });
+    internalRes.write(externalRes.payload);
+  }
+
+  async handleRequest(
     req: http.IncomingMessage,
     res: http.ServerResponse<http.IncomingMessage> & { req: http.IncomingMessage },
   ) {
@@ -63,9 +79,10 @@ class Server {
         if (result.match) {
           console.log(`Handled request with route ${this.methods[index]} - ${route}`);
 
-          this.processRequest(req, result.params!).then((result) => console.log(result.params));
-          res.writeHead(200, { "Content-Type": "text/plain" });
-          res.end("OK");
+          const externalReq = await this.createExternalRequest(req, result.params!);
+          const externalRes = this.handlers[index](externalReq);
+          this.writeToInternalResponse(res, externalRes);
+          res.end();
           return;
         }
       }
@@ -74,9 +91,10 @@ class Server {
     res.end("NO HANDLER MATCH");
   }
 
-  get(route: string) {
+  get(route: string, handler: (req: ClientRequest) => ClientResponse) {
     this.methods.push("GET");
     this.routes.push(route);
+    this.handlers.push(handler);
   }
 
   post(route: string) {
