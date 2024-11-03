@@ -5,13 +5,7 @@ export enum ContentType {
 }
 
 export class ClientResponse {
-  payload: string;
-  contentType: ContentType;
-  status: number;
-
-  constructor(payload: string, contentType: ContentType, status: number) {
-    this.payload = payload;
-    this.contentType = contentType;
-    this.status = status;
-  }
+  payload: string | undefined;
+  contentType: ContentType | undefined;
+  status: number | undefined;
 }

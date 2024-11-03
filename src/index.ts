@@ -5,6 +5,13 @@ import Server from "./server.js";
 const server = new Server();
 
 server.listen(3001);
-server.get("/api", (req: ClientRequest) => {
-  return new ClientResponse("OKE", ContentType.Text, 200);
+server.get("/api/:p", (req: ClientRequest, res: ClientResponse) => {
+  if (req.params.p === "asd") {
+    res.payload = "Oke - asd";
+  } else {
+    res.payload = "Oke - no asd";
+  }
+
+  res.contentType = ContentType.Text;
+  res.status = 200;
 });

@@ -17,7 +17,7 @@ import { ClientResponse, ContentType } from "./response.js";
 class Server {
   routes: string[];
   methods: string[];
-  handlers: ((req: ClientRequest) => ClientResponse)[];
+  handlers: ((req: ClientRequest, res: ClientResponse) => void)[];
   server: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse> | undefined;
 
   constructor() {
@@ -63,7 +63,7 @@ class Server {
           ? "text/html"
           : "text/plain";
 
-    internalRes.writeHead(externalRes.status, { "Content-Type": contentType });
+    internalRes.writeHead(externalRes.status!, { "Content-Type": contentType });
     internalRes.write(externalRes.payload);
   }
 
@@ -80,7 +80,8 @@ class Server {
           console.log(`Handled request with route ${this.methods[index]} - ${route}`);
 
           const externalReq = await this.createExternalRequest(req, result.params!);
-          const externalRes = this.handlers[index](externalReq);
+          const externalRes = new ClientResponse();
+          this.handlers[index](externalReq, externalRes);
           this.writeToInternalResponse(res, externalRes);
           res.end();
           return;
@@ -91,30 +92,34 @@ class Server {
     res.end("NO HANDLER MATCH");
   }
 
-  get(route: string, handler: (req: ClientRequest) => ClientResponse) {
+  get(route: string, handler: (req: ClientRequest, res: ClientResponse) => void) {
     this.methods.push("GET");
     this.routes.push(route);
     this.handlers.push(handler);
   }
 
-  post(route: string) {
+  post(route: string, handler: (req: ClientRequest, res: ClientResponse) => void) {
     this.methods.push("POST");
     this.routes.push(route);
+    this.handlers.push(handler);
   }
 
-  put(route: string) {
+  put(route: string, handler: (req: ClientRequest, res: ClientResponse) => void) {
     this.methods.push("PUT");
     this.routes.push(route);
+    this.handlers.push(handler);
   }
 
-  patch(route: string) {
+  patch(route: string, handler: (req: ClientRequest, res: ClientResponse) => void) {
     this.methods.push("PATCH");
     this.routes.push(route);
+    this.handlers.push(handler);
   }
 
-  delete(route: string) {
+  delete(route: string, handler: (req: ClientRequest, res: ClientResponse) => void) {
     this.methods.push("DELETE");
     this.routes.push(route);
+    this.handlers.push(handler);
   }
 
   match(url: string, route: string) {
